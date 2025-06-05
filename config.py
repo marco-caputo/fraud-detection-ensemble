@@ -8,6 +8,7 @@ RAW_DATASET_NAME = "raw_dataset"                        # Name of the raw datase
 CLEANED_DATASET_NAME = "cleaned_dataset"                # Name of the cleaned dataset file
 ENCODED_DATASET_NAME = "encoded_dataset"                # Name of the encoded dataset file
 AUTOENC_STATE_DICT_FILENAME = "autoencoder_state_dict"  # Filename for saving the autoencoder state dictionary
+RANDOM_FOREST_MODEL_FILENAME = "random_forest_model"    # Name of the Random Forest model file
 
 ### PREPROCESSING CONFIGURATION ###
 MAX_Z_SCORE = 5                                         # Z-score threshold for outlier removal
@@ -22,3 +23,7 @@ AUTOENC_LEARNING_RATE = 1e-3                            # Learning rate for the 
 
 ### RANDOM SEED ###
 RANDOM_SEED = 42                                        # Seed for reproducibility in experiments
+
+### RANDOM FOREST CONFIGURATION ###
+RM_TEST_SIZE = 0.2                                 # Proportion of the dataset to include in the test split
+RM_N_ESTIMATORS = 100                              # Number of trees in the Random Forest
