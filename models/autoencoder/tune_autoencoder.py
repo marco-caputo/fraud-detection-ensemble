@@ -12,7 +12,7 @@ def objective(trial):
     batch_size = trial.suggest_categorical("batch_size", [32, 64, 128])
     learning_rate = trial.suggest_loguniform("lr", 1e-5, 1e-3)
     epochs = trial.suggest_categorical("epochs", [20, 50, 100])
-    hidden_size = trial.suggest_categorical("hidden_size", [16, 24, 32])
+    hidden_size = trial.suggest_categorical("hidden_size", [32, 64, 128])
     hidden_layers = trial.suggest_int("hidden_layers", 1, 3)
 
     # Build and train the model with suggested params

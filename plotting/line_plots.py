@@ -6,7 +6,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from config import IMAGES_FOLDER_NAME
+from config import *
+
+# Get the absolute path to the directory containing this script
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def save_training_error_plot(model_name: str, train_losses: list[float], val_losses: list[float]):
@@ -31,4 +34,7 @@ def save_training_error_plot(model_name: str, train_losses: list[float], val_los
     plt.title(f"{model_name}: Training and Validation Loss over Epochs")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(f"../../{IMAGES_FOLDER_NAME}{model_name}_loss_plot.png")
+
+    # Save the plot
+    plot_path = os.path.join(script_dir, IMAGES_FOLDER_NAME, f"{model_name}_loss_plot.png")
+    plt.savefig(plot_path)

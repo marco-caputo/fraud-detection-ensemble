@@ -12,28 +12,30 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 from models.autoencoder.autoencoder import Autoencoder
 from plotting.line_plots import save_training_error_plot
-from config import (RANDOM_SEED, AUTOENC_TEST_SIZE, AUTENC_VALIDATION_SIZE, AUTOENC_LEARNING_RATE, AUTOENC_EPOCHS,
-                    AUTOENC_BATCH_SIZE, DATASET_FOLDER_NAME, CLEANED_DATASET_NAME, AUTOENC_STATE_DICT_FILENAME,
-                    AUTOENC_HIDDEN_LAYER_SIZE, AUTOENC_HIDDEN_LAYERS, LATENT_DIMENSION, N_FEATURES)
+from config import *
 
 
 def train_autoencoder(model: Autoencoder, train_loader: DataLoader, val_loader: DataLoader,
-                      criterion, optimizer: Optimizer, device, epochs=AUTOENC_EPOCHS) -> tuple[
-    list[float], list[float]]:
+                      criterion, optimizer: Optimizer, device, epochs=AUTOENC_EPOCHS,
+                      patience: int = 10, min_delta: float = 1e-4) -> tuple[list[float], list[float]]:
     train_losses = []
     val_losses = []
+
+    best_val_loss = float('inf')
+    patience_counter = 0
+    best_model_state = None
 
     for epoch in range(epochs):
         model.train()
         train_loss = 0
         for batch in train_loader:
-            x = batch[0].to(device)  # Move data to the device (GPU or CPU)
-            optimizer.zero_grad()  # Reset gradients
-            output = model(x)  # Forward pass through the encoder and decoder
-            loss = criterion(output, x)  # Compute loss in reconstructing the input
-            loss.backward()  # Backpropagation
-            optimizer.step()  # Update model parameters
-            train_loss += loss.item() * x.size(0)  # Accumulate loss proportional to batch size
+            x = batch[0].to(device)
+            optimizer.zero_grad()
+            output = model(x)
+            loss = criterion(output, x)
+            loss.backward()
+            optimizer.step()
+            train_loss += loss.item() * x.size(0)
 
         train_loss /= len(train_loader.dataset)
         train_losses.append(train_loss)
@@ -41,7 +43,23 @@ def train_autoencoder(model: Autoencoder, train_loader: DataLoader, val_loader: 
         # Validation phase
         val_loss = evaluate_autoencoder(model, val_loader, criterion, device)
         val_losses.append(val_loss)
+
         print(f"Epoch {epoch + 1}/{epochs}, Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
+
+        # Early stopping check
+        if val_loss + min_delta < best_val_loss:
+            best_val_loss = val_loss
+            patience_counter = 0
+            best_model_state = model.state_dict()  # Save best model
+        else:
+            patience_counter += 1
+            if patience_counter >= patience:
+                print(f"Early stopping at epoch {epoch + 1}. Best Val Loss: {best_val_loss:.6f}")
+                break
+
+    # Restore best model weights
+    if best_model_state:
+        model.load_state_dict(best_model_state)
 
     return train_losses, val_losses
 
@@ -68,20 +86,27 @@ def train_autoencoder_model(model_name: str = "Autoencoder",
                             ) -> tuple[Autoencoder, float]:
     """ Train an autoencoder model on the cleaned dataset and return the trained model and test loss."""
 
+    # Get the absolute path to the directory containing this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    train_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{TRAIN_DATASET_PREFIX}_{CLEANED_DATASET_NAME}.csv")
+    validation_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{VALIDATION_DATASET_PREFIX}_{CLEANED_DATASET_NAME}.csv")
+    test_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{TEST_DATASET_PREFIX}_{CLEANED_DATASET_NAME}.csv")
+
     # All features except the last column (target)
-    X = pd.read_csv(f"../../{DATASET_FOLDER_NAME}/{CLEANED_DATASET_NAME}.csv").iloc[:, :-1]
+    X_train = pd.read_csv(train_path).iloc[:, :-1]
+    X_validation = pd.read_csv(validation_path).iloc[:, :-1]
+    X_test = pd.read_csv(test_path).iloc[:, :-1]
 
     # Convert to torch tensors
-    X_tensor = torch.tensor(X.values, dtype=torch.float32)
-
-    # Train/test split
-    X_train, X_test = train_test_split(X_tensor, test_size=AUTOENC_TEST_SIZE, random_state=RANDOM_SEED)
-    X_train, X_validation = train_test_split(X_train, test_size=AUTENC_VALIDATION_SIZE, random_state=RANDOM_SEED)
+    X_train_tensor = torch.tensor(X_train.values, dtype=torch.float32)
+    X_validation_tensor = torch.tensor(X_validation.values, dtype=torch.float32)
+    X_test_tensor = torch.tensor(X_test.values, dtype=torch.float32)
 
     # Dataloaders
-    train_loader = DataLoader(TensorDataset(X_train), batch_size=batch_size, shuffle=True)
-    validation_loader = DataLoader(TensorDataset(X_validation), batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(TensorDataset(X_test), batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(TensorDataset(X_train_tensor), batch_size=batch_size, shuffle=True)
+    validation_loader = DataLoader(TensorDataset(X_validation_tensor), batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(TensorDataset(X_test_tensor), batch_size=batch_size, shuffle=False)
 
     # Initialize model, loss function, and optimizer
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

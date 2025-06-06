@@ -7,10 +7,13 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from config import DATASET_FOLDER_NAME, RAW_DATASET_NAME, CLEANED_DATASET_NAME, MAX_Z_SCORE
+from config import *
 
+# Get the absolute path to the directory containing this script
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
-df = pd.read_csv(f"../{DATASET_FOLDER_NAME}/{RAW_DATASET_NAME}.csv")
+raw_data_path = os.path.join(script_dir, "..", DATASET_FOLDER_NAME, f"{RAW_DATASET_NAME}.csv")
+df = pd.read_csv(raw_data_path)
 
 X = df.iloc[:, 1:-1]  # All features column
 y = df.iloc[:, -1]    # Target column (the last column)
@@ -31,6 +34,7 @@ numeric_columns = df_no_outliers.select_dtypes(include='number').columns
 df_no_outliers[numeric_columns] = scaler.fit_transform(df_no_outliers[numeric_columns])
 print("Normalized the dataset using StandardScaler.")
 
+cleaned_data_path = os.path.join(script_dir, "..", DATASET_FOLDER_NAME, f"{CLEANED_DATASET_NAME}.csv")
 print("Saving the cleaned dataset...")
-df_no_outliers.to_csv(f"../csv_files/{CLEANED_DATASET_NAME}.csv", index=False)
+df_no_outliers.to_csv(cleaned_data_path, index=False)
 print(f"Cleaned dataset saved as {CLEANED_DATASET_NAME}.csv in {DATASET_FOLDER_NAME} folder.")

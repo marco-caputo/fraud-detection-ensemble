@@ -4,8 +4,7 @@ import shutil
 import kagglehub
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from config import DATASET_FOLDER_NAME, ORIGINAL_DATASET_NAME, RAW_DATASET_NAME
-
+from config import *
 
 # Define the target path
 os.makedirs(os.path.join(os.path.dirname(os.getcwd()), DATASET_FOLDER_NAME), exist_ok=True)
