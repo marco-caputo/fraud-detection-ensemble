@@ -1,7 +1,11 @@
+import os
+import sys
+
 import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from config import DATASET_FOLDER_NAME, CLEANED_DATASET_NAME, AUTOENC_STATE_DICT_FILENAME, ENCODED_DATASET_NAME
 from models.autoencoder.autoencoder import Autoencoder
 
