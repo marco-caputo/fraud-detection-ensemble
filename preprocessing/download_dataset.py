@@ -6,9 +6,11 @@ import kagglehub
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from config import *
 
-# Define the target path
-os.makedirs(os.path.join(os.path.dirname(os.getcwd()), DATASET_FOLDER_NAME), exist_ok=True)
-target_path = os.path.join(os.path.dirname(os.getcwd()), DATASET_FOLDER_NAME)
+# Get the absolute path to the directory containing this script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+os.makedirs(os.path.join(script_dir, "..", DATASET_FOLDER_NAME), exist_ok=True)
+target_path = os.path.join(script_dir, "..", DATASET_FOLDER_NAME)
 
 # Delete csv_files if they exist
 for filename in os.listdir(target_path):
