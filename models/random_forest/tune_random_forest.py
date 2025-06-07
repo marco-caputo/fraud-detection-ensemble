@@ -29,7 +29,7 @@ def objective(trial):
     return test_mcc
 
 study = optuna.create_study(direction="maximize")
-study.optimize(objective, n_trials=50)
+study.optimize(objective, n_trials=30)
 print(study.best_params)
 
 # Save best parameters to a JSON file
