@@ -1,17 +1,13 @@
-import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset, Subset
-import numpy as np
 
-class baseNeuralNetwork(nn.Module):
+class BaseNeuralNetwork(nn.Module):
     """
     A single neural network model used as a base learner in the bagging ensemble.
     It takes a 10-dimensional latent representation as input and outputs a
     single logit for binary classification (e.g., Fraud/Legit).
     """
-    def __init__(self, input_dim=10, hidden_dims=[64, 32], dropout_rate=0.3):
-        super(baseNeuralNetwork, self).__init__()
+    def __init__(self, input_dim: int, hidden_dims: list[int], dropout_rate: float):
+        super(BaseNeuralNetwork, self).__init__()
 
         layers = []
         current_dim = input_dim
