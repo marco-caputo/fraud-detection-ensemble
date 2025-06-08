@@ -55,5 +55,5 @@ if __name__ == "__main__":
                                        min_samples_split=RF_MIN_SAMPLES_SPLIT,
                                        min_samples_leaf=RF_MIN_SAMPLES_LEAF,
                                        max_features=RF_MAX_FEATURES)
-    joblib.dump(rf, f"{RANDOM_FOREST_MODEL_FILENAME}.joblib")
+    joblib.dump(rf, os.path.join(script_dir,f"{RANDOM_FOREST_MODEL_FILENAME}.joblib"))
     print(f"Random Forest model successfully saved {RANDOM_FOREST_MODEL_FILENAME}.joblib in the current directory.")

@@ -14,6 +14,9 @@ from models.autoencoder.autoencoder import Autoencoder
 from plotting.line_plots import save_training_error_plot
 from config import *
 
+# Get the absolute path to the directory containing this script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 def train_autoencoder(model: Autoencoder, train_loader: DataLoader, val_loader: DataLoader,
                       criterion, optimizer: Optimizer, device, epochs=AUTOENC_EPOCHS,
@@ -86,9 +89,6 @@ def train_autoencoder_model(model_name: str = "Autoencoder",
                             ) -> tuple[Autoencoder, float]:
     """ Train an autoencoder model on the cleaned dataset and return the trained model and test loss."""
 
-    # Get the absolute path to the directory containing this script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
     train_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{TRAIN_DATASET_PREFIX}_{CLEANED_DATASET_NAME}.csv")
     validation_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{VALIDATION_DATASET_PREFIX}_{CLEANED_DATASET_NAME}.csv")
     test_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{TEST_DATASET_PREFIX}_{CLEANED_DATASET_NAME}.csv")
@@ -134,4 +134,4 @@ def train_autoencoder_model(model_name: str = "Autoencoder",
 if __name__ == "__main__":
     model, test_loss = train_autoencoder_model()
     print("Evaluation completed. Saving the model state dictionary.")
-    torch.save(model.state_dict(), f"{AUTOENC_STATE_DICT_FILENAME}.pth")
+    torch.save(model.state_dict(), os.path.join(script_dir, f"{AUTOENC_STATE_DICT_FILENAME}.pth"))

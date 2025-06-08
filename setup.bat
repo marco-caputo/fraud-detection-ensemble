@@ -5,3 +5,4 @@ python models/autoencoder/train_autoencoder.py
 python models/autoencoder/encode_dataset.py
 python models/random_forest/train_random_forest.py
 python models/neural_network/train_bagged_neural_network.py
+python models/voting_classifier/voting_classifier.py

@@ -14,6 +14,7 @@ VALIDATION_DATASET_PREFIX = "validation"                # Prefix of the validati
 AUTOENC_STATE_DICT_FILENAME = "autoencoder_state_dict"  # Filename for saving the autoencoder state dictionary
 RANDOM_FOREST_MODEL_FILENAME = "random_forest_model"    # Name of the Random Forest model file
 BAGGED_NN_MODEL_FILENAME = "bagged_neural_networks_model"  # Name of the Bagged Neural Networks model file
+
 ### DATASET CONFIGURATION ###
 TEST_SIZE = 0.2                                         # Proportion of the dataset to include in the test split
 VALIDATION_SIZE = 0.2                                   # Proportion of the training set to include in the validation split
@@ -37,14 +38,14 @@ RF_MIN_SAMPLES_SPLIT = 2                                # Minimum number of samp
 RF_MIN_SAMPLES_LEAF = 1                                 # Minimum number of samples required to be at a leaf node
 RF_MAX_FEATURES = "sqrt"                                # Number of features to consider when looking for the best split
 
-### RANDOM SEED ###
-RANDOM_SEED = 42                                        # Seed for reproducibility in experiments
-
 ### BAGGED NEURAL NETWORK CONFIGURATION ###
 INPUT_DIM = 10                                          # Input dimension of your latent features
-N_ESTIMATORS = 5                                        # Number of base neural networks in the ensemble
+N_ESTIMATORS = 10                                       # Number of base neural networks in the ensemble
 HIDDEN_DIMS = [64, 32]                                  # Hidden layer dimensions for each base network
 DROPOUT_RATE = 0.3                                      # Dropout rate for each base network
 EPOCHS_PER_MODEL = 50                                   # Number of epochs to train each base model
 BATCH_SIZE = 32                                         # Batch size for training
-LEARNING_RATE = 0.001                                   # Learning rate for base model optimizers
+NN_LEARNING_RATE = 0.001                                # Learning rate for base model optimizers
+
+### RANDOM SEED ###
+RANDOM_SEED = 42                                        # Seed for reproducibility in experiments
