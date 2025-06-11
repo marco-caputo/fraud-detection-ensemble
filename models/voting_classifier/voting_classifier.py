@@ -1,4 +1,5 @@
 import os
+import sys
 
 import joblib
 import numpy as np
@@ -7,12 +8,13 @@ import torch
 from sklearn.ensemble import VotingClassifier
 from sklearn.preprocessing import LabelEncoder
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from models.bagged_neural_networks.bagged_neural_networks import BaggedNeuralNetworks
 from models.voting_classifier.sklearn_wrapper import SklearnWrappedEnsemble
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
                              matthews_corrcoef, classification_report, confusion_matrix)
 from config import *
-from plotting.classification_metrics import plot_classification_metrics
+from plotting.classification_metrics import *
 
 
 def vote_with_details(torch_model: BaggedNeuralNetworks, rf_model, X, device='cpu'):
@@ -44,7 +46,7 @@ def vote_with_details(torch_model: BaggedNeuralNetworks, rf_model, X, device='cp
     return majority_class, confidence  # e.g., confidence[i] = 0.87 means 87% agreement
 
 
-def evaluate_voting_classifier(coting_clf: VotingClassifier, X, y):
+def get_predictions(voting_clf: VotingClassifier, X):
     """
     Evaluate the voting classifier on the provided dataset.
 
@@ -78,11 +80,11 @@ def get_performance_measures(model, X_test, y_test, verbose=True):
     y_true = y_test
     y_pred = model.predict(X_test)
 
-    # Use predict_proba if available to get probabilities
+    # Use predict_proba to get probabilities
     if hasattr(model, "predict_proba"):
         y_proba = model.predict_proba(X_test)[:, 1]
     else:
-        y_proba = y_pred  # fallback (not recommended)
+        y_proba = y_pred
 
     metrics = {
         "Accuracy": accuracy_score(y_true, y_pred),
@@ -104,11 +106,39 @@ def get_performance_measures(model, X_test, y_test, verbose=True):
 
     return metrics
 
+def evaluate_voting_classifier(voting_clf, X_test, y_test):
+    """
+    Evaluate the voting classifier and print performance metrics.
+
+    Args:
+        voting_clf (VotingClassifier): The voting classifier to evaluate.
+        X_test (pd.DataFrame): Test features.
+        y_test (pd.Series): True labels.
+
+    Returns:
+        None
+    """
+    # Evaluate the voting classifier
+    predictions, confidence = get_predictions(voting_clf, X_test)
+    print("Predictions:", predictions)
+    print("Confidence scores:", confidence)
+
+    # Evaluate the performance of the voting classifier
+    performance_metrics = get_performance_measures(voting_clf, X_test, y_test)
+    print("Performance Metrics:")
+    for metric, value in performance_metrics.items():
+        print(f"{metric}: {value:.6f}")
+
+    # Plotting the performance metrics
+    plot_confusion_matrix_paper(voting_clf, X_test, y_test)
+    plot_roc_curve_paper(voting_clf, X_test, y_test)
+
 
 # Get the absolute path to the directory containing this script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 device = "cpu"
 
+print("Loading pre-trained models...")
 # Load the pre-trained BaggedNeuralNetworks model
 nn_ensemble = BaggedNeuralNetworks(
     n_estimators=N_ESTIMATORS,
@@ -126,40 +156,31 @@ torch_estimator = SklearnWrappedEnsemble(nn_ensemble, device=device)
 
 voting_clf = VotingClassifier(
     estimators=[("rf", rf), ("nn_ensemble", torch_estimator)],
-    voting='soft'  # Use probabilities instead of labels
+    voting='soft'  # Use probabilities
 )
 
-# Normally, .fit() must be called, but since models are pretrained,
-# you can just manually set the fitted flag and estimators_ attribute
 voting_clf.estimators_ = voting_clf.estimators
 voting_clf.le_ = rf.classes_  # set label encoder
 voting_clf._is_fitted = True  # mark as fitted
 
 test_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{TEST_DATASET_PREFIX}_{ENCODED_DATASET_NAME}.csv")
-# Example usage:
-X_test, y_test = pd.read_csv(test_path).iloc[:, :-1], pd.read_csv(test_path).iloc[:, -1]
+test_df = pd.read_csv(test_path)
+X_test, y_test = test_df.iloc[:, :-1], test_df.iloc[:, -1]
 
-# Normally, .fit() must be called, but since models are pretrained,
-# you can just manually set the fitted flag and estimators_ attribute
+# The fitted flag and estimators_ attribute is manually set as models are pre-trained
 voting_clf.estimators_ = [est for name, est in voting_clf.estimators]
 le = LabelEncoder()
 le.fit(rf.classes_)
 voting_clf.le_ = le  # set label encoder
 voting_clf._is_fitted = True  # mark as fitted
 
-x_test = torch.tensor(X_test.values, dtype=torch.float32).to(device)
-y_test = torch.tensor(y_test.values, dtype=torch.float32).to(device)
+print("Evaluating the voting classifier...")
+evaluate_voting_classifier(voting_clf, X_test, y_test)
 
-# Evaluate the voting classifier
-predictions, confidence = evaluate_voting_classifier(voting_clf, X_test, y_test)
-print("Predictions:", predictions)
-print("Confidence scores:", confidence)
+outlier_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{ENCODED_OUTLIER_DATASET_NAME}.csv")
+outlier_df = pd.read_csv(outlier_path)
+X_outlier, y_outlier = outlier_df.iloc[:, :-1], outlier_df.iloc[:, -1]
 
-# Evaluate the performance of the voting classifier
-performance_metrics = get_performance_measures(voting_clf, X_test, y_test)
-print("Performance Metrics:")
-for metric, value in performance_metrics.items():
-    print(f"{metric}: {value:.6f}")
+print("Evaluating the voting classifier on the outlier dataset...")
+evaluate_voting_classifier(voting_clf, X_outlier, y_outlier)
 
-# Suppose voting_clf is your fitted ensemble
-plot_classification_metrics(voting_clf, X_test, y_test)

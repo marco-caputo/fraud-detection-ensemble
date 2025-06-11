@@ -26,15 +26,21 @@ df = pd.concat([X, y_clean], axis=1)
 # Remove outliers using Z-score method (those being more than 3 standard deviations from the mean are discarded)
 z_scores = np.abs(stats.zscore(df.select_dtypes(include='number')))
 df_no_outliers = df[(z_scores < MAX_Z_SCORE).all(axis=1)].copy()
-print(f"Removed {df.shape[0] - df_no_outliers.shape[0]} outliers from the dataset.")
+df_outliers = df[~((z_scores < MAX_Z_SCORE).all(axis=1))].copy()
+print(f"Removed {df_outliers.shape[0]} outliers from the dataset.")
 
 # Normalize the dataset using StandardScaler
 scaler = StandardScaler()
 numeric_columns = df_no_outliers.select_dtypes(include='number').columns
 df_no_outliers[numeric_columns] = scaler.fit_transform(df_no_outliers[numeric_columns])
+df_outliers[numeric_columns] = scaler.transform(df_outliers[numeric_columns])
 print("Normalized the dataset using StandardScaler.")
 
 cleaned_data_path = os.path.join(script_dir, "..", DATASET_FOLDER_NAME, f"{CLEANED_DATASET_NAME}.csv")
+outliears_data_path = os.path.join(script_dir, "..", DATASET_FOLDER_NAME, f"{OUTLIER_DATASET_NAME}.csv")
 print("Saving the cleaned dataset...")
 df_no_outliers.to_csv(cleaned_data_path, index=False)
+print("Saving the outlier dataset...")
+df_outliers.to_csv(outliears_data_path, index=False)
+
 print(f"Cleaned dataset saved as {CLEANED_DATASET_NAME}.csv in {DATASET_FOLDER_NAME} folder.")
