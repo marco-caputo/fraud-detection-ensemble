@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 
 import joblib
 import numpy as np
@@ -8,6 +7,7 @@ import pandas as pd
 import torch
 from sklearn.ensemble import VotingClassifier
 from sklearn.preprocessing import LabelEncoder
+import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from models.bagged_neural_networks.bagged_neural_networks import BaggedNeuralNetworks
@@ -148,14 +148,14 @@ print("Loading pre-trained models...")
 # Load the pre-trained BaggedNeuralNetworks model
 nn_ensemble = BaggedNeuralNetworks(
     n_estimators=N_ESTIMATORS,
-    input_dim=INPUT_DIM,
+    input_dim=N_FEATURES,
     hidden_dims=HIDDEN_DIMS,
     dropout_rate=DROPOUT_RATE,
     device=device
 )
 nn_ensemble.load_state_dict(torch.load(os.path.join(script_dir, "..", "bagged_neural_networks",
-                                                     f"{BAGGED_NN_MODEL_FILENAME}_state_dict.pth")))
-rf = joblib.load(os.path.join(script_dir, "..", "random_forest", f"{RANDOM_FOREST_MODEL_FILENAME}.joblib"))
+                                                     f"{BAGGED_NN_MODEL_FILENAME}_not_encoded_state_dict.pth")))
+rf = joblib.load(os.path.join(script_dir, "..", "random_forest", f"{RANDOM_FOREST_MODEL_FILENAME}_not_encoded.joblib"))
 
 # torch_ensemble is your trained BaggedNeuralNetworks instance
 torch_estimator = SklearnWrappedEnsemble(nn_ensemble, device=device)
@@ -169,7 +169,7 @@ voting_clf.estimators_ = voting_clf.estimators
 voting_clf.le_ = rf.classes_  # set label encoder
 voting_clf._is_fitted = True  # mark as fitted
 
-test_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{TEST_DATASET_PREFIX}_{ENCODED_DATASET_NAME}.csv")
+test_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{TEST_DATASET_PREFIX}_{CLEANED_DATASET_NAME}.csv")
 test_df = pd.read_csv(test_path)
 X_test, y_test = test_df.iloc[:, :-1], test_df.iloc[:, -1]
 
@@ -182,11 +182,4 @@ voting_clf._is_fitted = True  # mark as fitted
 
 print("Evaluating the voting classifier...")
 evaluate_voting_classifier(voting_clf, X_test, y_test)
-
-outlier_path = os.path.join(script_dir, "..", "..", DATASET_FOLDER_NAME, f"{ENCODED_OUTLIER_DATASET_NAME}.csv")
-outlier_df = pd.read_csv(outlier_path)
-X_outlier, y_outlier = outlier_df.iloc[:, :-1], outlier_df.iloc[:, -1]
-
-print("Evaluating the voting classifier on the outlier dataset...")
-evaluate_voting_classifier(voting_clf, X_outlier, y_outlier)
 
