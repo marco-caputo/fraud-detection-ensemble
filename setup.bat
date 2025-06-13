@@ -6,3 +6,14 @@ python models/autoencoder/encode_dataset.py
 python models/random_forest/train_random_forest.py
 python models/bagged_neural_networks/train_bagged_neural_network.py
 python models/voting_classifier/voting_classifier.py
+
+python comparison_models/gaussian_nb.py
+python comparison_models/k_nearest_neighbors.py
+python comparison_models/log_reg.py
+python comparison_models/svm.py
+
+python models/random_forest/train_rf_not_encoded.py
+python models/random_forest/rf_time_eval_encoding.py
+python models/bagged_neural_networks/train_bagged_neural_network_not_encoded.py
+python models/bagged_neural_networks/bagged_nn_time_eval_encoding.py
+python models/voting_classifier/voting_classifier_not_encoded.py
